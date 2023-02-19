@@ -11,26 +11,28 @@ class Map():
     def __init__(self):
         pygame.font.init()
         self.FONT = pygame.font.SysFont('Arial',25)
+        self.GAME_TITILE = pygame.display.set_caption("Falling Stars")
         self.WINDOW_WIDTH, self.WINDOW_HEIGHT = 1000, 700
+        self.WINDOW = pygame.display.set_mode((self.WINDOW_WIDTH,self.WINDOW_HEIGHT))
+
         self.BORDER_THICKNESS = 30
         self.BORDER_LEFT_X, self.BORDER_LEFT_Y = 100, 0
         self.BORDER_RIGHT_X, self.BORDER_RIGHT_Y = 870, 0
-        self.SCORE_BOARD_WIDTH, self.SCORE_BOARD_HEIGHT = 80, 50
-        self.GAME_TITILE = pygame.display.set_caption("Falling Stars")
-        self.WINDOW = pygame.display.set_mode((self.WINDOW_WIDTH,self.WINDOW_HEIGHT))
-        self.SCORE_BOARD = pygame.Rect(self.BORDER_RIGHT_X + self.BORDER_THICKNESS, 0, self.SCORE_BOARD_WIDTH, self.SCORE_BOARD_HEIGHT)
         self.BORDER_IMAGE = pygame.image.load(os.path.join("wall_border.png")).convert_alpha()
+
+        self.SCORE_BOARD_WIDTH, self.SCORE_BOARD_HEIGHT = 80, 50
+        self.SCORE_BOARD = pygame.Rect(self.BORDER_RIGHT_X + self.BORDER_THICKNESS, 0, self.SCORE_BOARD_WIDTH, self.SCORE_BOARD_HEIGHT)
         self.points = 0
+        self.font_surface = self.FONT.render("Score: " + str(self.points),False,RED)
 
     def score(self,score):
         self.points = score
 
     def draw(self):
         self.WINDOW.fill(BACKGROUND_COLOR)
-        self.WINDOW.blits([(self.BORDER_IMAGE,(self.BORDER_LEFT_X,self.BORDER_LEFT_Y)), (self.BORDER_IMAGE,(self.BORDER_RIGHT_X,self.BORDER_RIGHT_Y))])
         self.font_surface = self.FONT.render("Score: " + str(self.points),False,RED)
         self.score_board_image = pygame.draw.rect(self.WINDOW,BACKGROUND_COLOR,self.SCORE_BOARD)
-        self.WINDOW.blit(self.font_surface,(self.BORDER_RIGHT_X+self.BORDER_THICKNESS,0))
+        self.WINDOW.blits([(self.BORDER_IMAGE,(self.BORDER_LEFT_X,self.BORDER_LEFT_Y)), (self.BORDER_IMAGE,(self.BORDER_RIGHT_X,self.BORDER_RIGHT_Y)),(self.font_surface,(self.BORDER_RIGHT_X+self.BORDER_THICKNESS,0))])
 
 class Slime(Map):
     def __init__(self):
@@ -117,7 +119,7 @@ def main():
                     del delete_star # Delete Star object
         
         # Delete Star's objects that passed the border
-        if len(star_list_object) >= 5:
+        if len(star_list_object) == 3:
             for i, star_object in enumerate(star_list_object):
                 if star_object.y > map.WINDOW_HEIGHT:   # If the star didn't get eaten by the slime and it's passed through the map, delete the star object
                     delete_star = star_list_object.pop(i)
