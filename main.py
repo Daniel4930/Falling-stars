@@ -53,7 +53,7 @@ class Star(Map):
         super().__init__()
         self.STAR_SIZE = 60
         self.x = random.randint(self.BORDER_LEFT_X + self.BORDER_THICKNESS,self.BORDER_RIGHT_X - self.STAR_SIZE)
-        self.y = -(self.STAR_SIZE/2)
+        self.y = -(self.STAR_SIZE)
         self.STAR = pygame.transform.scale(pygame.image.load(os.path.join("star_image.png")).convert_alpha(),(self.STAR_SIZE,self.STAR_SIZE))
 
     def movement(self,star_movement_speed):
@@ -116,7 +116,7 @@ def main():
                     delete_star = star_list_object.pop(i)
                     del delete_star # Delete Star object
         
-        # Delete unnecessary Star's object to save memory
+        # Delete Star's objects that passed the border
         if len(star_list_object) >= 5:
             for i, star_object in enumerate(star_list_object):
                 if star_object.y > map.WINDOW_HEIGHT:   # If the star didn't get eaten by the slime and it's passed through the map, delete the star object
