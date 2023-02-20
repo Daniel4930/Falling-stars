@@ -1,4 +1,4 @@
-import pygame, os, random
+import pygame, os, random, sys
 pygame.init()
 pygame.display.init()
 
@@ -20,6 +20,10 @@ class Slime(pygame.sprite.Sprite):
         super().__init__()
         self.x = x
         self.y = y
+        self.height = 20
+        self.jumping = False
+        self.velocity = self.height
+        self.gravity = 1
         self.left_move = left_move
         if self.left_move == True:
             self.image = pygame.transform.scale(pygame.image.load(os.path.join("character_left_image.png")).convert_alpha(),(SLIME_SIZE, SLIME_SIZE))
@@ -29,21 +33,32 @@ class Slime(pygame.sprite.Sprite):
 
     # Check for collision between a star and slime, only the star got deleted from the screen when collided
     def collision(self, slime, star_group):
-        if pygame.sprite.collide_rect_ratio(0.75):
-            collided = pygame.sprite.spritecollide(slime, star_group, True)
-            return collided
+        collided = pygame.sprite.spritecollide(slime, star_group, True, pygame.sprite.collide_circle_ratio(0.50))
+        return collided
 
     def update(self, slime_movement_speed):
         # Control the slime's movement using keyboard
         key_pressed = pygame.key.get_pressed()
+        if key_pressed[pygame.K_SPACE]:
+            self.jumping = True
+        
+        # Logic part on how jumping work
+        if self.jumping:
+            self.y -= self.velocity
+            self.velocity -= self.gravity
+            if self.velocity < -self.height:
+                self.jumping = False
+                self.velocity = self.height
+
         if key_pressed[pygame.K_LEFT]: # move left
             self.x -= slime_movement_speed
-            self.rect.topleft = [self.x, self.y]
             self.left_move = True
+
         if key_pressed[pygame.K_RIGHT]: # move right
             self.x += slime_movement_speed
-            self.rect.topleft = [self.x, self.y]
             self.left_move = False
+
+        self.rect.topleft = [self.x, self.y]
 
         if self.left_move == False:
             # When slime moved right, display slime's image where it facing to the right
@@ -93,7 +108,8 @@ def main():
         for event in pygame.event.get():
             # To stop the game, click the red button on the window
             if event.type == pygame.QUIT:
-                run = False
+                run = True
+                sys.exit()
 
         # This doesn't allow the slime to go over the borders and the map
         if slime.x < BORDER_LEFT_X + BORDER_THICKNESS + slime_movement_speed:
