@@ -25,11 +25,11 @@ def main():
             if event.type == pygame.QUIT:
                 run = True
                 sys.exit()
-
+                
         # Create star sprites and store all sprites a group
         cooldown = pygame.time.get_ticks() - now
         if cooldown >= 2000:
-            new_star = Star(random.randint(game.BORDER_LEFT_X + game.BORDER_THICKNESS, game.BORDER_RIGHT_X - game.STAR_SIZE), -(game.STAR_SIZE))
+            new_star = Star(random.randrange(game.BORDER_LEFT_X + game.BORDER_THICKNESS, game.BORDER_RIGHT_X - game.STAR_SIZE), -(game.STAR_SIZE))
             star_group.add(new_star)
             now = pygame.time.get_ticks()
 
