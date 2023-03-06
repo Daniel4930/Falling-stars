@@ -2,20 +2,21 @@ import pygame, os, sys
 from game import Game
 
 class Slime(Game, pygame.sprite.Sprite):
-    def __init__(self, x, y, left_move):
+    def __init__(self):
         Game.__init__(self)
         pygame.sprite.Sprite.__init__(self)
-        self.x = x
-        self.y = y
+        self.x = self.WINDOW_WIDTH/2 - self.SLIME_SIZE/2
+        self.y = self.WINDOW_HEIGHT - self.SLIME_SIZE
         self.slime_speed = 5
+        self.tolerance = 5
         self.height = 20
         self.jumping = False
         self.velocity = self.height
         self.gravity = 1
-        self.left_move = left_move
+        self.left_move = True
         if self.left_move == True:
-            self.image = pygame.transform.scale(pygame.image.load(os.path.join("images", "character_left_image.png")).convert_alpha(),(self.SLIME_SIZE, self.SLIME_SIZE))
-        self.image = pygame.transform.scale(pygame.image.load(os.path.join("images", "character_right_image.png")).convert_alpha(),(self.SLIME_SIZE, self.SLIME_SIZE))
+            self.image = pygame.image.load(os.path.join("images", "character_left_image.png")).convert_alpha()
+        self.image = pygame.image.load(os.path.join("images", "character_right_image.png")).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.topleft = [self.x, self.y]
 
@@ -23,8 +24,8 @@ class Slime(Game, pygame.sprite.Sprite):
     def collision(self, slime, star_group):
         collided = pygame.sprite.spritecollide(slime, star_group, True, pygame.sprite.collide_circle_ratio(0.50))
         return collided
-
-    def update(self):
+    
+    def input(self):
         # Control the slime's movement using keyboard
         key_pressed = pygame.key.get_pressed()
         if key_pressed[pygame.K_LEFT]: # move left
@@ -49,20 +50,22 @@ class Slime(Game, pygame.sprite.Sprite):
             sys.exit()
 
         # This doesn't allow the slime to go over the borders and the map
-        if self.x < self.BORDER_LEFT_X + self.BORDER_THICKNESS + self.slime_speed:
+        if self.x < self.BORDER_LEFT_X + self.BORDER_THICKNESS + self.slime_speed + self.tolerance:
             self.x = self.BORDER_LEFT_X + self.BORDER_THICKNESS + self.slime_speed
-        if self.x > self.BORDER_RIGHT_X - self.SLIME_SIZE - self.slime_speed:
-            self.x = self.BORDER_RIGHT_X - self.SLIME_SIZE - self.slime_speed
+        if self.x > self.BORDER_RIGHT_X - self.BORDER_THICKNESS - self.SLIME_SIZE - self.slime_speed - self.tolerance:
+            self.x = self.BORDER_RIGHT_X - self.SLIME_SIZE - self.BORDER_THICKNESS - self.slime_speed
         if self.y > self.WINDOW_HEIGHT - self.SLIME_SIZE:
             self.y = self.WINDOW_HEIGHT - self.SLIME_SIZE
         if self.y < 0:
             self.y = 0
 
+    def update(self):
+
         self.rect.topleft = [self.x, self.y]
 
         if self.left_move == False:
             # When slime moved right, display slime's image where it facing to the right
-            self.image = pygame.transform.scale(pygame.image.load(os.path.join("images", "character_right_image.png")).convert_alpha(),(self.SLIME_SIZE, self.SLIME_SIZE))
+            self.image = pygame.image.load(os.path.join("images", "character_right_image.png")).convert_alpha()
         else:
             # When slime moved left, display slime's image where it facing to the left
-            self.image = pygame.transform.scale(pygame.image.load(os.path.join("images", "character_left_image.png")).convert_alpha(),(self.SLIME_SIZE, self.SLIME_SIZE))
+            self.image = pygame.image.load(os.path.join("images", "character_left_image.png")).convert_alpha()

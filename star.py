@@ -1,13 +1,14 @@
-import pygame, os
+import pygame, os, random
 from game import Game
 
 class Star(Game, pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self):
         Game.__init__(self)
         pygame.sprite.Sprite.__init__(self)
-        self.star_gravity = 5
-        self.x, self.y = x, y
-        self.image = pygame.transform.scale(pygame.image.load(os.path.join("images", "star_image.png")).convert_alpha(),(self.STAR_SIZE,self.STAR_SIZE))
+        self.star_gravity = 3
+        self.x = random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE)
+        self.y = -(self.STAR_SIZE)
+        self.image = pygame.image.load(os.path.join("images", "star_image.png")).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.x, self.y)
 

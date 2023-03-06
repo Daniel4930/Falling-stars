@@ -11,7 +11,7 @@ class Game:
         self.RED = (255,0,0)
 
         self.WINDOW = pygame.display.set_mode((self.WINDOW_WIDTH,self.WINDOW_HEIGHT))
-        self.BORDER_IMAGE = pygame.transform.scale(pygame.image.load(os.path.join("images", "wall_border.png")).convert_alpha(), (self.BORDER_THICKNESS, self.WINDOW_HEIGHT))
+        self.BORDER_IMAGE = pygame.image.load(os.path.join("images", "wall_border.png")).convert_alpha()
         self.BACKGROUND_IMAGE = pygame.image.load(os.path.join("images", "background.png")).convert_alpha()
         self.GAME_TITILE = pygame.display.set_caption("Falling Stars")
         self.FONT = pygame.font.SysFont('Arial',25)
