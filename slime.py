@@ -60,9 +60,7 @@ class Slime(Game, pygame.sprite.Sprite):
             self.y = 0
 
     def update(self):
-
         self.rect.topleft = [self.x, self.y]
-
         if self.left_move == False:
             # When slime moved right, display slime's image where it facing to the right
             self.image = pygame.image.load(os.path.join("images", "character_right_image.png")).convert_alpha()

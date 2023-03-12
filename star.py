@@ -12,6 +12,17 @@ class Star(Game, pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.x, self.y)
 
+    #Create star in an interval (the interval is in main.py)
+    def create_star(self, star_group):
+        star_group.add(Star())
+
+    #Remove any star sprite/object that go outside the map 
+    def remove_star(self, star_group):
+        list = star_group.sprites()
+        for i in range(len(list)):
+            if list[i].y > self.WINDOW_HEIGHT:
+                star_group.remove(list[i])
+
     # Allow the stars to fall down from the top of the screen
     def update(self):
         self.y += self.star_gravity
