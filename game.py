@@ -1,4 +1,5 @@
-import pygame, os
+import pygame, os, random
+from star import Star
 
 # Parent class
 class Game():
@@ -50,6 +51,17 @@ class Game():
             pygame.display.update()
         self.alpha = 0
 
+    #spawn stars onto the map
+    def spawn_star(self):
+        return Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE))
+    
+     #Remove any star sprite/object that go outside the map 
+    def remove_star(self, star_group):
+        list = star_group.sprites()
+        for i in range(len(list)):
+            if list[i].y > self.WINDOW_HEIGHT:
+                star_group.remove(list[i])
+
     def update_score(self, score):
         self.score = score
 
@@ -59,7 +71,7 @@ class Game():
             pygame.draw.rect(self.WINDOW, self.DARK_RED, self.MENU_BUTTON)
         else:
             pygame.draw.rect(self.WINDOW, self.RED, self.MENU_BUTTON)
-        self.WINDOW.blit(self.MENU_BUTTON_TEXT, (self.MENU_BUTTON_X + 17, self.MENU_BUTTON_Y + 10))
+        self.WINDOW.blit(self.MENU_BUTTON_TEXT, (self.MENU_BUTTON_X + 10, self.MENU_BUTTON_Y + 10))
 
     def draw(self):
         font_surface = self.FONT.render("Score: " + str(self.score), False, self.RED)

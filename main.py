@@ -1,7 +1,6 @@
 import pygame, sys
 from slime import Slime
 from game import Game
-from star import Star
 pygame.init()
 pygame.display.init()
 
@@ -16,9 +15,7 @@ def main():
     slime = Slime()
     slime_group = pygame.sprite.Group()
     slime_group.add(slime)
-    star = Star()
     star_group = pygame.sprite.Group()
-    star_group.add(star)
         
     while run:
         for event in pygame.event.get():
@@ -40,20 +37,20 @@ def main():
         if menu:
             cooldown = pygame.time.get_ticks() - now
             if cooldown >= 2000:
-                star.create_star(star_group)
+                star_group.add(game.spawn_star())
                 now = pygame.time.get_ticks()
             game.WINDOW.fill((0,0,0))
             game.draw_menu()
             star_group.draw(game.WINDOW)
             star_group.update()
-            star.remove_star(star_group)
+            game.remove_star(star_group)
             pygame.display.update()
             frame.tick(fps)
         else:
             # Create star sprites and store all sprites a group
             cooldown = pygame.time.get_ticks() - now
             if cooldown >= 3000:
-                star.create_star(star_group)
+                star_group.add(game.spawn_star())
                 now = pygame.time.get_ticks()
 
             # If collided, increase the score by 1
@@ -62,15 +59,15 @@ def main():
             game.update_score(score)
 
             #If a star go outside the map, remove that star from sprite group
-            star.remove_star(star_group)
+            game.remove_star(star_group)
             
             # Display the game
             game.WINDOW.fill((0,0,0))
             game.draw()
             slime.input()
+            star_group.draw(game.WINDOW)
             slime_group.draw(game.WINDOW)
             slime_group.update()
-            star_group.draw(game.WINDOW)
             star_group.update()
             pygame.display.update()
             frame.tick(fps)

@@ -14,8 +14,7 @@ class Slime(Game, pygame.sprite.Sprite):
         self.velocity = self.height
         self.gravity = 1
         self.left_move = True
-        if self.left_move == True:
-            self.image = pygame.image.load(os.path.join("images", "character_left_image.png")).convert_alpha()
+        self.image = pygame.image.load(os.path.join("images", "character_left_image.png")).convert_alpha()
         self.image = pygame.image.load(os.path.join("images", "character_right_image.png")).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.topleft = [self.x, self.y]
