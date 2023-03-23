@@ -2,7 +2,8 @@ Falling Star is a game develop by Daniel Le
 
 - The game is about collecting stars falling from the sky, the player is controlling the slime to collect star.
 - The player control can move left, right, and jump.
-- The player can't go pass the border
+- The player can't go pass the border.
+- When the player collected a star, the score increases by 1
 
 Game development tools:
 Code Editor: Visual Studio Code
