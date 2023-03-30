@@ -9,13 +9,11 @@ class Game():
         self.BORDER_LEFT_X, self.BORDER_LEFT_Y = 100, 0
         self.BORDER_RIGHT_X, self.BORDER_RIGHT_Y = 870, 0
         self.SCORE_BOARD_WIDTH, self.SCORE_BOARD_HEIGHT = 80, 50
-        self.MENU_BUTTON_WIDTH, self.MENU_BUTTON_HEIGHT = 100, 50
-        self.MENU_BUTTON_X, self.MENU_BUTTON_Y = (self.WINDOW_WIDTH / 2) - (self.MENU_BUTTON_WIDTH / 2), (self.WINDOW_HEIGHT / 2) - self.MENU_BUTTON_HEIGHT
         self.RED = (255,0,0)
         self.DARK_RED = (144,1,57)
         self.BLACK = (0,0,0)
-        self.button_pressed = False
         self.alpha, self.score = 0, 0
+        self.game_state = "On home screen"
 
         self.WINDOW = pygame.display.set_mode((self.WINDOW_WIDTH,self.WINDOW_HEIGHT))
         self.BORDER_IMAGE = pygame.image.load(os.path.join("images", "wall_border.png")).convert_alpha()
@@ -23,37 +21,42 @@ class Game():
         self.MENU_IMAGE = pygame.image.load(os.path.join("images", "menu_image.png"))
         self.GAME_TITILE = pygame.display.set_caption("Falling Stars")
         self.FONT = pygame.font.SysFont('Arial',25)
-        self.MENU_BUTTON = pygame.Rect(self.MENU_BUTTON_X, self.MENU_BUTTON_Y, self.MENU_BUTTON_WIDTH, self.MENU_BUTTON_HEIGHT)
         self.SCREEN_TRANSITION = pygame.surface.Surface((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
-        self.MENU_BUTTON_TEXT = self.FONT.render("START", False, (255,255,255))
 
     #Check if mouse clicked on the button
-    def menu_screen(self, menu):
+    def mouse_clicked(self, button_x, button_y, button_width, button_height):
         mouse_pos = pygame.mouse.get_pos()
-        if (self.MENU_BUTTON_X < mouse_pos[0] < self.MENU_BUTTON_X + self.MENU_BUTTON_WIDTH) and (self.MENU_BUTTON_Y < mouse_pos[1] < self.MENU_BUTTON_Y + self.MENU_BUTTON_HEIGHT):
-            self.button_pressed = True
-            return False
-        else:
-            if menu == True:
-                return True
-            else:
-                return False
+        if (button_x < mouse_pos[0] < button_x + button_width) and (button_y < mouse_pos[1] < button_y + button_height):
+            self.game_state = "Exit home screen"
+            return True
+        return False
+    
+    def draw_starting_page(self, star_group, button_single_group, button_text, button_x, button_y):
+        font_surface = self.FONT.render(button_text, True, self.BLACK)
+        self.WINDOW.fill(self.BLACK)
+        self.WINDOW.blit(self.MENU_IMAGE, (0,0))
+        button_single_group.draw(self.WINDOW)
+        self.WINDOW.blit(font_surface, (button_x + 15, button_y + 10))
+        star_group.draw(self.WINDOW)
+        button_single_group.update()
+        star_group.update()
             
     #This method both empty all star sprites and creates screen transition when existing menu screen
     def exist_menu_screen(self, star_group):
+        pygame.mouse.set_visible(False)
         star_group.empty()
         #This while loop create screen transition when existing menu screen
         while self.alpha != 255:
             self.alpha += 3
+            self.WINDOW.blit(self.MENU_IMAGE, (0,0))
             self.SCREEN_TRANSITION.set_alpha(self.alpha)
-            self.draw_menu()
             self.WINDOW.blit(self.SCREEN_TRANSITION, (0,0))
             pygame.display.update()
         self.alpha = 0
 
     #spawn stars onto the map
-    def spawn_star(self):
-        return Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE))
+    def spawn_star(self, star_group):
+        star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE)))
     
      #Remove any star sprite/object that go outside the map 
     def remove_star(self, star_group):
@@ -62,18 +65,17 @@ class Game():
             if list[i].y > self.WINDOW_HEIGHT:
                 star_group.remove(list[i])
 
-    def update_score(self, score):
-        self.score = score
+    def slime_and_stars_collision(self, slime, star_group):
+        collided = slime.collision(slime, star_group)
+        self.score += len(collided)
 
-    def draw_menu(self):
-        self.WINDOW.blit(self.MENU_IMAGE, (0,0))
-        if self.button_pressed:
-            pygame.draw.rect(self.WINDOW, self.DARK_RED, self.MENU_BUTTON)
-        else:
-            pygame.draw.rect(self.WINDOW, self.RED, self.MENU_BUTTON)
-        self.WINDOW.blit(self.MENU_BUTTON_TEXT, (self.MENU_BUTTON_X + 10, self.MENU_BUTTON_Y + 10))
-
-    def draw(self):
-        font_surface = self.FONT.render("Score: " + str(self.score), False, self.RED)
+    def draw(self, slime, star_group, slime_single_group):
+        font_surface = self.FONT.render("Score: " + str(self.score), True, self.RED)
         # Setup window's background, borders, and score board.
+        self.WINDOW.fill(self.BLACK)
         self.WINDOW.blits([(self.BACKGROUND_IMAGE, (0,0)), (self.BORDER_IMAGE, (self.BORDER_LEFT_X, self.BORDER_LEFT_Y)), (self.BORDER_IMAGE, (self.BORDER_RIGHT_X, self.BORDER_RIGHT_Y)),(font_surface, (self.BORDER_RIGHT_X + self.BORDER_THICKNESS, 0))])
+        slime.input()
+        slime_single_group.draw(self.WINDOW)
+        star_group.draw(self.WINDOW)
+        slime_single_group.update()
+        star_group.update()
