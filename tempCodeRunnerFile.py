@@ -1,2 +1,0 @@
-
-    exit_menu = False
