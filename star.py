@@ -1,16 +1,24 @@
 import pygame, os
 
+'''
+Initial_position info:
+1 -> spawn from the top of the map
+2 -> spawn from the right of the map
+3 -> spawn from the bottom of the map
+4 -> spawn from the left of the map
+'''
 class Star(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, initial_position, animated):
         super().__init__()
-        self.star_gravity = 3
+        self.star_speed = 3
         self.x = x
         self.y = y
         self.is_moving = True
         self.on_top_of_platform = False
-        self.is_animated = False
-        self.sprites = []
+        self.is_animated = animated
+        self.initial_position = initial_position
         self.current_sprite = 0
+        self.sprites = []
         self.sprites.append(pygame.image.load(os.path.join("images/star", "star_image.png")).convert_alpha())
         self.sprites.append(pygame.image.load(os.path.join("images/star", "star_image_1.png")).convert_alpha())
         self.sprites.append(pygame.image.load(os.path.join("images/star", "star_image_2.png")).convert_alpha())
@@ -34,26 +42,38 @@ class Star(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.x, self.y)
 
-    def animated(self):
-        self.is_animated = True
-    
-    def stop_animation(self):
-        self.is_animated = False
-
     def platform_collision(self, platform_y):
-        star_platform_collision_tolerance = 3
+        star_platform_collision_tolerance = self.star_speed + 2
         self.y = platform_y + star_platform_collision_tolerance
         self.on_top_of_platform = True
 
+    def no_platform_collision(self):
+        self.on_top_of_platform = False
+
     # Allow the stars to fall down from the top of the screen
     def update(self):
-        if not self.on_top_of_platform:
-            self.y += self.star_gravity
-        self.rect.topleft = (self.x, self.y)
+        if not self.on_top_of_platform and self.is_animated == False:
+            self.y += self.star_speed
+
         if self.is_animated:
+            self.star_speed = 10
             self.current_sprite += 0.50
+
+            if self.initial_position == 1:
+                self.y += self.star_speed
+
+            elif self.initial_position == 2:
+                self.x -= self.star_speed
+            
+            elif self.initial_position == 3:
+                self.y -= self.star_speed
+
+            elif self.initial_position == 4:
+                self.x += self.star_speed
 
             if self.current_sprite >= len(self.sprites):
                 self.current_sprite = 0
 
             self.image = self.sprites[int(self.current_sprite)]
+
+        self.rect.topleft = (self.x, self.y)

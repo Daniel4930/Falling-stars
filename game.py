@@ -15,6 +15,7 @@ class Game():
         self.alpha, self.score = 0, 0
         self.level = 1
         self.increase_difficulty = True
+        self.enable_screen_transition = True
         self.game_state = "On home screen"
 
         self.WINDOW = pygame.display.set_mode((self.WINDOW_WIDTH,self.WINDOW_HEIGHT))
@@ -22,7 +23,7 @@ class Game():
         self.BACKGROUND_IMAGE = pygame.image.load(os.path.join("images", "background.png")).convert_alpha()
         self.MENU_IMAGE = pygame.image.load(os.path.join("images", "menu_image.png"))
         self.GAME_TITILE = pygame.display.set_caption("Falling Stars")
-        self.FONT = pygame.font.SysFont('Arial',25)
+        self.FONT = pygame.font.SysFont('Arial',22)
         self.SCREEN_TRANSITION = pygame.Surface((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
 
     # Check if mouse clicked on the button
@@ -47,15 +48,17 @@ class Game():
     def exist_menu_screen(self, star_group):
         pygame.mouse.set_visible(False)
         star_group.empty()
-        self.screen_transition()
+        if self.enable_screen_transition:
+            self.screen_transition()
+        self.enable_screen_transition = True
 
     def screen_transition(self):
         # This while loop create screen transition when existing menu screen
         while self.alpha != 255:
             self.alpha += 3
             self.WINDOW.blit(self.MENU_IMAGE, (0,0))
-            self.SCREEN_TRANSITION.set_alpha(self.alpha)
-            self.WINDOW.blit(self.SCREEN_TRANSITION, (0,0))
+            self.BACKGROUND_IMAGE.set_alpha(self.alpha)
+            self.WINDOW.blit(self.BACKGROUND_IMAGE, (0,0))
             pygame.display.update()
         self.alpha = 0
 
@@ -66,28 +69,71 @@ class Game():
             platform_group.add(platform3)
 
         elif self.level == 2 and self.increase_difficulty:
+            platform4.y = platform3.y + 50
+            platform3.y = self.WINDOW_HEIGHT / 2 - 100
+            platform4.platform_moving()
             platform_group.add(platform4)
+            platform1.y = 550
 
         elif self.level == 3 and self.increase_difficulty:
+            platform5.rotate_platform()
+            platform3.x = self.WINDOW_WIDTH / 2 - 100
             platform_group.add(platform5)
 
         self.increase_difficulty = False
 
-    def level_up(self):
+    def level_up(self, slime, star_group):
         if self.score == 5 or self.score == 10:
             self.level += 1
             self.increase_difficulty = True
-
+            self.enable_screen_transition = False
+            self.exist_menu_screen(star_group)
+            slime.return_to_spawn_point()
+            
     # Spawn stars onto the map
     def spawn_star(self, star_group):
-        star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE)))
+        star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE), 1, False))
+
+    #Spawn spinning star
+    def spawn_spinning_star(self, star_group):
+        window_side = random.randrange(1,4)
+
+        if window_side == 1: #Spawn from the top
+            star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE), window_side, True))
+
+        elif window_side == 2: #Spawn from the right
+            star_group.add(Star(self.WINDOW_WIDTH + self.STAR_SIZE, random.randrange(0, self.WINDOW_HEIGHT - self.STAR_SIZE), window_side, True))
+        
+        elif window_side == 3: #Spawn from the bottom
+            star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), self.WINDOW_HEIGHT + self.STAR_SIZE, window_side, True))
+        
+        elif window_side == 4: #Spawn from the left
+            star_group.add(Star(self.WINDOW_WIDTH - self.STAR_SIZE, random.randrange(0, self.WINDOW_HEIGHT - self.STAR_SIZE), window_side, True))
     
     # Remove any star sprite/object that go outside the map 
     def remove_star_outside_map(self, star_group):
         list = star_group.sprites()
         for i in range(len(list)):
-            if list[i].y > self.WINDOW_HEIGHT:
-                star_group.remove(list[i])
+            if list[i].is_animated == False:
+                if list[i].y > self.WINDOW_HEIGHT:
+                    star_group.remove(list[i])
+
+            else:
+                if list[i].initial_position == 1:
+                    if list[i].y > self.WINDOW_HEIGHT:
+                        star_group.remove(list[i])
+
+                elif list[i].initial_position == 2:
+                    if list[i].x < -(self.STAR_SIZE):
+                        star_group.remove(list[i])
+
+                elif list[i].initial_position == 3:
+                    if list[i].y < -(self.STAR_SIZE):
+                        star_group.remove(list[i])
+
+                else:
+                    if list[i].x > self.WINDOW_WIDTH + self.STAR_SIZE:
+                        star_group.remove(list[i])
 
     #Check if a star collide with a platform
     #If so, stop the star from falling down, and let the star stay on top of platform
@@ -97,25 +143,42 @@ class Game():
         for i in range(len(all_star)):
             for y in range(len(all_platform)):
                 if pygame.sprite.collide_rect(all_star[i], all_platform[y]):
-                    all_star[i].platform_collision(all_platform[y].y - self.STAR_SIZE)
+                    if all_star[i].is_animated:
+                        star_group.remove(all_star[i])
+                    else: 
+                        all_star[i].platform_collision(all_platform[y].y - self.STAR_SIZE)
+                else:
+                    all_star[i].no_platform_collision()
 
     # Check for star and slime collision
     def slime_and_stars_collision(self, slime, star_group):
-        collided = slime.slime_star_collision(slime, star_group)
-        self.score += len(collided)
-        if collided:
-            self.level_up()
+        star_collided = slime.slime_star_collision(slime, star_group)
+        for i in range(len(star_collided)):
+            if star_collided[i].is_animated:
+                slime.health -= 1
+                slime.is_animated = True
+                if slime.health == 0:
+                    return False
+            else:
+                self.score += len(star_collided)
+
+        if star_collided:
+            self.level_up(slime, star_group)
+
+        return True
 
     def draw(self, slime, star_group, slime_single_group, platform_group):
-        font_surface = self.FONT.render("Score: " + str(self.score), True, self.RED)
-
+        score_text_surface = self.FONT.render("Score: " + str(self.score), True, self.RED)
+        level_text_surface = self.FONT.render("Level: " + str(self.level), True, self.RED)
+        heath_text_surface = self.FONT.render("Health: " + str(slime.health), True, self.RED)
         # Setup window's background, borders, and score board.
         self.WINDOW.fill(self.BLACK)
         self.WINDOW.blits([(self.BACKGROUND_IMAGE, (0,0)), 
                            (self.BORDER_IMAGE, (self.BORDER_LEFT_X, self.BORDER_LEFT_Y)), 
                            (self.BORDER_IMAGE, (self.BORDER_RIGHT_X, self.BORDER_RIGHT_Y)),
-                           (font_surface, (self.BORDER_RIGHT_X + self.BORDER_THICKNESS, 0))])
-        slime.input()
+                           (score_text_surface, (self.BORDER_RIGHT_X + self.BORDER_THICKNESS, 0)),
+                           (level_text_surface, (self.BORDER_RIGHT_X + self.BORDER_THICKNESS, 30)),
+                           (heath_text_surface, (self.BORDER_RIGHT_X + self.BORDER_THICKNESS, 60))])
         slime_single_group.draw(self.WINDOW)
         platform_group.draw(self.WINDOW)
         star_group.draw(self.WINDOW)
