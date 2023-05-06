@@ -1,5 +1,5 @@
 import pygame, sys
-from slime import Slime
+from player import Player
 from game import Game
 from button import Button
 from jump_platform import Platform
@@ -12,13 +12,19 @@ def main():
     frame = pygame.time.Clock()
     fps = 60
     run = True
-    exit_menu = False
 
     game = Game()
-    slime = Slime()
+    slime = Player()
     start_button = Button("START", 100, 50, (game.WINDOW_WIDTH / 2) - (130 / 2), (game.WINDOW_HEIGHT / 2) - 50)
-    button_single_group = pygame.sprite.GroupSingle()
-    button_single_group.add(start_button)
+    resume_button = Button("RESUME", 120, 50, (game.WINDOW_WIDTH / 2) - 120 / 2, (game.WINDOW_HEIGHT / 2) - 100)
+    new_game_button = Button("NEW GAME", 150, 50, (game.WINDOW_WIDTH / 2) - 150 / 2, (game.WINDOW_HEIGHT / 2))
+    exit_button = Button("EXIT GAME", 150, 50, (game.WINDOW_WIDTH / 2) - 150 / 2, (game.WINDOW_HEIGHT / 2) + 100)
+    button_list = []
+    button_list.append(start_button)
+    button_list.append(resume_button)
+    button_list.append(exit_button)
+    button_list.append(new_game_button)
+    button_group = pygame.sprite.Group()
     slime_single_group = pygame.sprite.GroupSingle()
     slime_single_group.add(slime)
     star_group = pygame.sprite.Group()
@@ -28,79 +34,83 @@ def main():
     platform3 = Platform(game.WINDOW_WIDTH / 2 - platform1.width / 2 + 150, game.WINDOW_HEIGHT / 2)
     platform4 = Platform(game.BORDER_LEFT_X + game.BORDER_THICKNESS, game.WINDOW_HEIGHT / 2)
     platform5 = Platform(game.BORDER_LEFT_X + game.BORDER_THICKNESS, game.WINDOW_HEIGHT / 2 - 182)
+    platform_list = []
+    platform_list.append(platform1)
+    platform_list.append(platform2)
+    platform_list.append(platform3)
+    platform_list.append(platform4)
+    platform_list.append(platform5)
     platform_group = pygame.sprite.Group()
         
     while run:
         for event in pygame.event.get():
-            # To stop the game, click the close button on the window
             if event.type == pygame.QUIT:
-                run = False
-                print("Good Game")
-                print("Your score: " + str(game.score))
                 pygame.quit()
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONUP:
                 if game.game_state == "On home screen":
-                    exit_menu = game.mouse_clicked(start_button.x, start_button.y, start_button.width, start_button.height, start_button.text)
-                    if exit_menu == True:
-                         game.exist_menu_screen(star_group)
+                    game.mouse_clicked(button_group)
+                    if game.game_state == "Exit home screen":
+                        star_group.empty()
+                        button_group.empty()
+                        game.exist_start_screen()
+                        game.game_state = "Playing"
+                        game.current_level(platform_group, platform_list)
 
-        if exit_menu == False: #Set this back to false after finish testing
+                if game.game_state == "Pause":
+                    game.mouse_clicked(button_group)
+                    if game.game_state == "On home screen":
+                        game.reset_game(star_group, platform_group, button_group)
+                        slime_single_group.empty()
+                        slime = Player()
+                        slime_single_group.add(slime)
+                        
+        if game.game_state == "On home screen":
             cooldown_spawn_star = pygame.time.get_ticks() - time_1
             if cooldown_spawn_star >= 2000:
-                game.spawn_star(star_group)
+                game.spawn_blue_star(star_group)
                 time_1 = pygame.time.get_ticks()
-            game.draw_starting_page(star_group, button_single_group, start_button.text, start_button.x, start_button.y)
+            button_group.add(start_button)
+            button_group.add(exit_button)
+            game.draw_starting_screen(star_group, button_group)
             pygame.display.update()
             frame.tick(fps)
 
-        else:
+        elif game.game_state == "Pause":
+            if len(button_group.sprites()) == 0:
+                button_group.add([button_list[1], button_list[2]], button_list[3])
+            game.draw_pause_screen(button_group)
+            pygame.display.update()
+            frame.tick(fps)
 
-            game.current_level(platform_group, platform1, platform2, platform3, platform4, platform5)
-
-            # Create star sprites and store all sprites a group
+        elif game.game_state == "Playing":
             cooldown_spawn_star = pygame.time.get_ticks() - time_1
             if cooldown_spawn_star >= 7000:
-                game.spawn_star(star_group)
+                game.spawn_blue_star(star_group)
                 time_1 = pygame.time.get_ticks()
 
             cooldown_spawn_spinning_star = pygame.time.get_ticks() - time_2
-            if cooldown_spawn_spinning_star >= 2000:
-                game.spawn_spinning_star(star_group)
+            if cooldown_spawn_spinning_star >= game.spin_star_spawn_rate:
+                game.spawn_yellow_star(star_group, slime)
                 time_2 = pygame.time.get_ticks()
 
-            #Check if a star collide with a platform
-            #If so, let the star stay on top of the platform
             game.star_and_platform_collision(platform_group, star_group)
-
-            #Check if the slime is on the ground
-            #If not then the slime's state is mid air
             slime.slime_on_ground()
-
-            #Allow the slime to free-fall when in mid air
             slime.free_fall()
-
-            # Allow player to jump onto platforms
             slime.collision_platform(slime, platform_group)
-
-            #If a star go outside the map, remove that star from sprite group
             game.remove_star_outside_map(star_group)
-
-            #Handle user's input
-            run = slime.input()
-
-            # If collided with a star, increase the score by 1
-            run = game.slime_and_stars_collision(slime, star_group)
-
-            #Display the game
+            slime.input()
+            game.check_game_state()
+            game.slime_and_stars_collision(slime, star_group, platform_group, platform_list)
             game.draw(slime, star_group, slime_single_group, platform_group)
             pygame.display.update()
             frame.tick(fps)
 
-    if run == False:
-        print("Good Game")
-        print("Your score: " + str(game.score))
+        elif game.game_state == "Exit":
+            print("Game Over\nScore: " + str(game.score))
+            run = False
+            sys.exit()
 
 if __name__ == "__main__":
     main()

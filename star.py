@@ -4,8 +4,7 @@ import pygame, os
 Initial_position info:
 1 -> spawn from the top of the map
 2 -> spawn from the right of the map
-3 -> spawn from the bottom of the map
-4 -> spawn from the left of the map
+3 -> spawn from the left of the map
 '''
 class Star(pygame.sprite.Sprite):
     def __init__(self, x, y, initial_position, animated):
@@ -38,7 +37,7 @@ class Star(pygame.sprite.Sprite):
         self.sprites.append(pygame.image.load(os.path.join("images/star", "star_image_16.png")).convert_alpha())
         self.sprites.append(pygame.image.load(os.path.join("images/star", "star_image_17.png")).convert_alpha())
 
-        self.image = self.sprites[self.current_sprite]
+        self.image = pygame.image.load(os.path.join("images/star", "blue_star_image.png")).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.x, self.y)
 
@@ -51,29 +50,31 @@ class Star(pygame.sprite.Sprite):
         self.on_top_of_platform = False
 
     # Allow the stars to fall down from the top of the screen
-    def update(self):
+    def update(self, level):
         if not self.on_top_of_platform and self.is_animated == False:
             self.y += self.star_speed
 
         if self.is_animated:
-            self.star_speed = 10
+            self.image = self.sprites[int(self.current_sprite)]
             self.current_sprite += 0.50
+
+            if level == 1:
+                self.star_speed = 5
+            elif level == 2:
+                self.star_speed = 10
+            elif level == 3:
+                self.star_speed = 13
 
             if self.initial_position == 1:
                 self.y += self.star_speed
 
             elif self.initial_position == 2:
                 self.x -= self.star_speed
-            
-            elif self.initial_position == 3:
-                self.y -= self.star_speed
 
-            elif self.initial_position == 4:
+            elif self.initial_position == 3:
                 self.x += self.star_speed
 
             if self.current_sprite >= len(self.sprites):
                 self.current_sprite = 0
-
-            self.image = self.sprites[int(self.current_sprite)]
 
         self.rect.topleft = (self.x, self.y)

@@ -10,7 +10,11 @@ class Button(Game, pygame.sprite.Sprite):
         self.x = button_x
         self.y = button_y
         self.text = text
+        self.font_surface = self.FONT.render(self.text, True, self.BLACK)
         self.image = pygame.Surface((self.width, self.height))
         self.image.fill(self.RED)
         self.rect = self.image.get_rect()
         self.rect.topleft = [self.x, self.y]
+
+    def update(self):
+        self.WINDOW.blit(self.font_surface, (self.x + 15, self.y + 10))

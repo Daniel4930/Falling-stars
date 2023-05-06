@@ -17,6 +17,7 @@ class Game():
         self.increase_difficulty = True
         self.enable_screen_transition = True
         self.game_state = "On home screen"
+        self.spin_star_spawn_rate = 4000
 
         self.WINDOW = pygame.display.set_mode((self.WINDOW_WIDTH,self.WINDOW_HEIGHT))
         self.BORDER_IMAGE = pygame.image.load(os.path.join("images", "wall_border.png")).convert_alpha()
@@ -27,116 +28,138 @@ class Game():
         self.SCREEN_TRANSITION = pygame.Surface((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
 
     # Check if mouse clicked on the button
-    def mouse_clicked(self, button_x, button_y, button_width, button_height, button_text):
-        mouse_pos = pygame.mouse.get_pos()
-        if (button_x < mouse_pos[0] < button_x + button_width) and (button_y < mouse_pos[1] < button_y + button_height) and button_text == "START":
-            self.game_state = "Exit home screen"
-            return True
-        return False
+    def mouse_clicked(self, button_group):
+        list = button_group.sprites()
+        for i in range(len(list)):
+            if list[i].rect.collidepoint(pygame.mouse.get_pos()):
+                if list[i].text == "START":
+                    self.game_state = "Exit home screen"
+                elif list[i].text == "RESUME":
+                    self.game_state = "Playing"
+                    pygame.mouse.set_visible(False)
+                elif list[i].text == "NEW GAME":
+                    self.game_state = "On home screen"
+                elif list[i].text == "EXIT GAME":
+                    self.game_state = "Exit"
     
-    def draw_starting_page(self, star_group, button_group, button_text, button_x, button_y):
-        font_surface = self.FONT.render(button_text, True, self.BLACK)
+    def draw_starting_screen(self, star_group, button_group):   
         self.WINDOW.fill(self.BLACK)
         self.WINDOW.blit(self.MENU_IMAGE, (0,0))
         button_group.draw(self.WINDOW)
-        self.WINDOW.blit(font_surface, (button_x + 15, button_y + 10))
         star_group.draw(self.WINDOW)
         button_group.update()
-        star_group.update()
+        star_group.update(self.level)
             
-    # This method both empty all star sprites and creates screen transition when existing menu screen
-    def exist_menu_screen(self, star_group):
+    def exist_start_screen(self):
         pygame.mouse.set_visible(False)
-        star_group.empty()
+        copy_of_current_screen = pygame.Surface.copy(self.WINDOW)
         if self.enable_screen_transition:
-            self.screen_transition()
+            self.screen_transition(copy_of_current_screen)
         self.enable_screen_transition = True
+        self.game_state = "Playing"
 
-    def screen_transition(self):
-        # This while loop create screen transition when existing menu screen
-        while self.alpha != 255:
-            self.alpha += 3
-            self.WINDOW.blit(self.MENU_IMAGE, (0,0))
-            self.BACKGROUND_IMAGE.set_alpha(self.alpha)
-            self.WINDOW.blit(self.BACKGROUND_IMAGE, (0,0))
+    def clear_level(self, star_group, slime):
+        star_group.empty()
+        slime.return_to_spawn_point()
+        copy_of_current_screen = pygame.Surface.copy(self.WINDOW)
+        self.screen_transition(copy_of_current_screen)
+
+    def screen_transition(self, copy_of_current_window_screen):
+        self.SCREEN_TRANSITION.fill(self.BLACK)
+        while self.alpha <= 255:
+            self.alpha += 2
+            self.WINDOW.blit(copy_of_current_window_screen, (0,0))
+            self.SCREEN_TRANSITION.set_alpha(self.alpha)
+            self.WINDOW.blit(self.SCREEN_TRANSITION, (0,0))
             pygame.display.update()
         self.alpha = 0
 
-    def current_level(self, platform_group, platform1, platform2, platform3, platform4, platform5):
+    def check_game_state(self):
+        key_pressed = pygame.key.get_pressed()
+        if key_pressed[pygame.K_SPACE]:
+            self.game_state = "Pause"
+
+    def draw_pause_screen(self, button_group):
+        pygame.mouse.set_visible(True)
+        self.WINDOW.fill(self.BLACK)
+        self.WINDOW.blit(self.BACKGROUND_IMAGE, (0,0))
+        button_group.draw(self.WINDOW)
+        button_group.update()
+
+    def current_level(self, platform_group, platform_list):
         if self.level == 1 and self.increase_difficulty:
-            platform_group.add(platform1)
-            platform_group.add(platform2)
-            platform_group.add(platform3)
+            platform_group.add([platform_list[0], platform_list[1], platform_list[2]])
 
         elif self.level == 2 and self.increase_difficulty:
-            platform4.y = platform3.y + 50
-            platform3.y = self.WINDOW_HEIGHT / 2 - 100
-            platform4.platform_moving()
-            platform_group.add(platform4)
-            platform1.y = 550
+            platform_list[3].y = platform_list[2].y + 50
+            platform_list[2].y = self.WINDOW_HEIGHT / 2 - 100
+            platform_list[3].platform_moving()
+            platform_group.add(platform_list[3])
+            platform_list[0].y = 550
 
         elif self.level == 3 and self.increase_difficulty:
-            platform5.rotate_platform()
-            platform3.x = self.WINDOW_WIDTH / 2 - 100
-            platform_group.add(platform5)
+            platform_list[4].rotate_platform()
+            platform_list[2].x = self.WINDOW_WIDTH / 2 - 100
+            platform_group.add(platform_list[4])
 
         self.increase_difficulty = False
 
-    def level_up(self, slime, star_group):
+        if self.level == 1:
+            self.spin_star_spawn_rate = 4000
+        elif self.level == 2:
+            self.spin_star_spawn_rate = 2000
+        elif self.level == 3:
+            self.spin_star_spawn_rate = 1000
+
+    def level_up(self, slime, star_group, platform_group, platform_list):
         if self.score == 5 or self.score == 10:
             self.level += 1
             self.increase_difficulty = True
             self.enable_screen_transition = False
-            self.exist_menu_screen(star_group)
-            slime.return_to_spawn_point()
+            self.clear_level(star_group, slime)
+            self.current_level(platform_group, platform_list)
             
-    # Spawn stars onto the map
-    def spawn_star(self, star_group):
+    def spawn_blue_star(self, star_group):
         star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE), 1, False))
 
-    #Spawn spinning star
-    def spawn_spinning_star(self, star_group):
+    def spawn_yellow_star(self, star_group, slime):
         window_side = random.randrange(1,4)
 
         if window_side == 1: #Spawn from the top
-            star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), -(self.STAR_SIZE), window_side, True))
-
+            star_group.add(Star(random.randrange(slime.x, slime.x + self.SLIME_WIDTH), -(self.STAR_SIZE), window_side, True))
+            
         elif window_side == 2: #Spawn from the right
-            star_group.add(Star(self.WINDOW_WIDTH + self.STAR_SIZE, random.randrange(0, self.WINDOW_HEIGHT - self.STAR_SIZE), window_side, True))
+            if self.WINDOW_HEIGHT - self.STAR_SIZE <= (slime.y + self.SLIME_HEIGHT) <= self.WINDOW_HEIGHT:
+                star_group.add(Star(self.WINDOW_WIDTH + self.STAR_SIZE, self.WINDOW_HEIGHT - self.STAR_SIZE, window_side, True))
+            else:
+                star_group.add(Star(self.WINDOW_WIDTH + self.STAR_SIZE, random.randrange(slime.y, slime.y + self.SLIME_HEIGHT), window_side, True))
         
-        elif window_side == 3: #Spawn from the bottom
-            star_group.add(Star(random.randrange(self.BORDER_LEFT_X + self.BORDER_THICKNESS, self.BORDER_RIGHT_X - self.STAR_SIZE), self.WINDOW_HEIGHT + self.STAR_SIZE, window_side, True))
-        
-        elif window_side == 4: #Spawn from the left
-            star_group.add(Star(self.WINDOW_WIDTH - self.STAR_SIZE, random.randrange(0, self.WINDOW_HEIGHT - self.STAR_SIZE), window_side, True))
+        elif window_side == 3: #Spawn from the left
+            if self.WINDOW_HEIGHT - self.STAR_SIZE <= (slime.y + self.SLIME_HEIGHT) <= self.WINDOW_HEIGHT:
+                star_group.add(Star(-self.STAR_SIZE, self.WINDOW_HEIGHT - self.STAR_SIZE, window_side, True))
+            else:
+                star_group.add(Star( -self.STAR_SIZE, random.randrange(slime.y, slime.y + self.SLIME_HEIGHT), window_side, True))
     
-    # Remove any star sprite/object that go outside the map 
     def remove_star_outside_map(self, star_group):
         list = star_group.sprites()
         for i in range(len(list)):
             if list[i].is_animated == False:
                 if list[i].y > self.WINDOW_HEIGHT:
                     star_group.remove(list[i])
-
             else:
                 if list[i].initial_position == 1:
                     if list[i].y > self.WINDOW_HEIGHT:
                         star_group.remove(list[i])
-
                 elif list[i].initial_position == 2:
                     if list[i].x < -(self.STAR_SIZE):
                         star_group.remove(list[i])
-
                 elif list[i].initial_position == 3:
                     if list[i].y < -(self.STAR_SIZE):
                         star_group.remove(list[i])
-
                 else:
                     if list[i].x > self.WINDOW_WIDTH + self.STAR_SIZE:
                         star_group.remove(list[i])
 
-    #Check if a star collide with a platform
-    #If so, stop the star from falling down, and let the star stay on top of platform
     def star_and_platform_collision(self, platform_group, star_group):
         all_star = star_group.sprites()
         all_platform = platform_group.sprites()
@@ -150,28 +173,30 @@ class Game():
                 else:
                     all_star[i].no_platform_collision()
 
-    # Check for star and slime collision
-    def slime_and_stars_collision(self, slime, star_group):
+    def slime_and_stars_collision(self, slime, star_group, platform_group, platform_list):
         star_collided = slime.slime_star_collision(slime, star_group)
         for i in range(len(star_collided)):
             if star_collided[i].is_animated:
                 slime.health -= 1
                 slime.is_animated = True
                 if slime.health == 0:
-                    return False
+                    self.game_state = "Exit"
             else:
                 self.score += len(star_collided)
-
-        if star_collided:
-            self.level_up(slime, star_group)
-
-        return True
+                self.level_up(slime, star_group, platform_group, platform_list)
+    
+    def reset_game(self, star_group, platform_group, button_group):
+        star_group.empty()
+        platform_group.empty()
+        button_group.empty()
+        self.score = 0
+        self.level = 1
+        self.increase_difficulty = True
 
     def draw(self, slime, star_group, slime_single_group, platform_group):
         score_text_surface = self.FONT.render("Score: " + str(self.score), True, self.RED)
         level_text_surface = self.FONT.render("Level: " + str(self.level), True, self.RED)
         heath_text_surface = self.FONT.render("Health: " + str(slime.health), True, self.RED)
-        # Setup window's background, borders, and score board.
         self.WINDOW.fill(self.BLACK)
         self.WINDOW.blits([(self.BACKGROUND_IMAGE, (0,0)), 
                            (self.BORDER_IMAGE, (self.BORDER_LEFT_X, self.BORDER_LEFT_Y)), 
@@ -184,4 +209,4 @@ class Game():
         star_group.draw(self.WINDOW)
         slime_single_group.update()
         platform_group.update()
-        star_group.update()
+        star_group.update(self.level)

@@ -1,11 +1,13 @@
+'''
 Falling Star is a game develop by Daniel Le
-
-- The game is about collecting stars falling from the sky, the player is controlling the slime to collect star.
-- The player control can move left, right, and jump.
-- The player can't go pass the border.
-- When the player collected a star, the score increases by 1
 
 Game development tools:
 Code Editor: Visual Studio Code
 Programming language: Python 3.10.5
 Game development library: Pygame v2.1.2 (To install: pip install pygame==2.1.2)
+
+Game descriptions:
+ - A player controlling a slime, and the player goal is to collect as many blue star as possible. The score is increase by one for each blue star collected.
+ - The player also needs to dodge the spinning yellow star. If not, the player will lost 1 health. The player have 5 health.
+ - For every 5 scores gained, the level increases 1, the level is cap at 3. And the game gets harder every time the level increase.
+ - The game will continue to run when the player exit the game or the player's health is zero.
