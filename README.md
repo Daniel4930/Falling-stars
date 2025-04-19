@@ -1,4 +1,5 @@
 # Falling-stars
+<<<<<<< HEAD
 Falling Star is a game developed by Daniel Le
 
 Game development tools:
@@ -22,3 +23,9 @@ Game descriptions:
  - The game will continue to run when the player exit the game or the player's health is zero.
  - To control the character use left arrow key to move left, right arrow key to move right, up arrow key to jump, and hit spacebar to pause the game.
 
+=======
+
+This is game written in Python using Pygame.
+
+The starting file is main.py
+>>>>>>> refs/remotes/origin/main
