@@ -126,19 +126,19 @@ class Game():
         window_side = random.randrange(1,4)
 
         if window_side == 1: #Spawn from the top
-            star_group.add(Star(random.randrange(slime.x, slime.x + self.SLIME_WIDTH), -(self.STAR_SIZE), window_side, True))
+            star_group.add(Star(random.randrange(int(slime.x), int(slime.x) + self.SLIME_WIDTH), -(self.STAR_SIZE), window_side, True))
             
         elif window_side == 2: #Spawn from the right
             if self.WINDOW_HEIGHT - self.STAR_SIZE <= (slime.y + self.SLIME_HEIGHT) <= self.WINDOW_HEIGHT:
                 star_group.add(Star(self.WINDOW_WIDTH + self.STAR_SIZE, self.WINDOW_HEIGHT - self.STAR_SIZE, window_side, True))
             else:
-                star_group.add(Star(self.WINDOW_WIDTH + self.STAR_SIZE, random.randrange(slime.y, slime.y + self.SLIME_HEIGHT), window_side, True))
+                star_group.add(Star(self.WINDOW_WIDTH + self.STAR_SIZE, random.randrange(int(slime.y), int(slime.y) + self.SLIME_HEIGHT), window_side, True))
         
         elif window_side == 3: #Spawn from the left
             if self.WINDOW_HEIGHT - self.STAR_SIZE <= (slime.y + self.SLIME_HEIGHT) <= self.WINDOW_HEIGHT:
                 star_group.add(Star(-self.STAR_SIZE, self.WINDOW_HEIGHT - self.STAR_SIZE, window_side, True))
             else:
-                star_group.add(Star( -self.STAR_SIZE, random.randrange(slime.y, slime.y + self.SLIME_HEIGHT), window_side, True))
+                star_group.add(Star( -self.STAR_SIZE, random.randrange(int(slime.y), int(slime.y) + self.SLIME_HEIGHT), window_side, True))
     
     def remove_star_outside_map(self, star_group):
         list = star_group.sprites()
