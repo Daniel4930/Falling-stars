@@ -68,7 +68,7 @@ def main():
                         
         if game.game_state == "On home screen":
             cooldown_spawn_star = pygame.time.get_ticks() - time_1
-            if cooldown_spawn_star >= 2000:
+            if cooldown_spawn_star >= 7000:
                 game.spawn_blue_star(star_group)
                 time_1 = pygame.time.get_ticks()
             button_group.add(start_button)
@@ -86,7 +86,7 @@ def main():
 
         elif game.game_state == "Playing":
             cooldown_spawn_star = pygame.time.get_ticks() - time_1
-            if cooldown_spawn_star >= 7000:
+            if cooldown_spawn_star >= 3000:
                 game.spawn_blue_star(star_group)
                 time_1 = pygame.time.get_ticks()
 

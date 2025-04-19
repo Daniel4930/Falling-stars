@@ -17,8 +17,8 @@ class Player(Game, pygame.sprite.Sprite):
         self.tolerance = 15
         self.height, self.gravity, self.counter = 16, 1, 0
         self.velocity = self.height
-        self.left_side_image = pygame.image.load(os.path.join("images", "character_left_image.png")).convert_alpha()
-        self.right_side_image = pygame.image.load(os.path.join("images", "character_right_image.png")).convert_alpha()
+        self.left_side_image = pygame.image.load(os.path.join("images", "character_left_image(original).png")).convert_alpha()
+        self.right_side_image = pygame.image.load(os.path.join("images", "character_right_image(original).png")).convert_alpha()
         self.image = self.left_side_image
         self.rect = self.image.get_rect()
         self.rect.topleft = [self.x, self.y]
